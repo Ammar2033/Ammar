@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/cs.min.js"></script> <!-- C# için -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/cpp.min.js"></script> <!-- C++ için -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/csharp.min.js"></script> <!-- C# için -->
+  <script>hljs.highlightAll();</script>
+  <title>MAI-S</title>
+  <style>
+pre code {
+  display: block;
+  padding: 10px;
+  border-radius: 5px;
+  background: #000000;
+}
+
+blockquote {
+  padding: 10px;
+  border-left: 5px solid #ccc;
+  background: #f9f9f9;
+  margin: 10px 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 10px 0;
+}
+
+ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+li {
+  margin: 5px 0;
+}
+
+.bot-message div {
+  margin-bottom: 5px;
+}
+
+/* Kayıt Düğmeleri */
+#start-record-btn {
+  background-color: #4CAF50; /* Yeşil */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+#start-record-btn:hover {
+  background-color: #45a049; /* Daha koyu yeşil */
+}
+
+#stop-record-btn {
+  background-color: #f44336; /* Kırmızı */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+#stop-record-btn:hover {
+  background-color: #d32f2f; /* Daha koyu kırmızı */
+}
+
+/* Ses Çalar */
+#audio-playback {
+  background-color: #f8f9fa; /* Açık gri */
+  border: 1px solid #ced4da; /* Açık gri kenarlık */
+  border-radius: 5px;
+  padding: 5px;
+}
+
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    background-color: #e6f2ff; /* Açık mavi arka plan */
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    width: 100%; 
+height: 100%;
+  }
+
+    #chat-container {
+    display: flex;
+    background-color: var(--container-background-color);
+    width: 95%; /* Genişlik %100 */
+    height: 95vh;
+    margin-top: 5vh;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+
+    #main-chat {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-history-container {
+      flex-grow: 1;
+      overflow-y: scroll;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    #chat-history {
+      height: 100%;
+    }
+
+    #sidebar {
+      width: 300px;
+      padding: 20px;
+      background-color: #f8f9fa; 
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto; /* Scrollbar eklemek için */
+      flex-shrink: 0; /* Sabit genişlik sağlamak için */
+    }
+
+    #conversation-list {
+      flex-grow: 1;
+      overflow-y: scroll;
+      margin-top: 20px;
+    }
+
+    .conversation-item {
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .conversation-item.selected {
+      background-color: #dcdcdc;
+    }
+
+    .edit-conversation-button {
+      background-color: #9115a2;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: absolute;
+      right: 10px;
+      top: 4px;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .user-message {
+      text-align: right;
+      padding: 10px;
+      background-color: var(--user-message-background);
+      border-radius: 10px;
+      margin-bottom: 15px;
+      color: var(--user-message-text);
+    }
+
+    .bot-message {
+      text-align: left;
+      padding: 15px;
+      background-color: #000000;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      color: white;
+      position: relative;
+    }
+
+    .bot-message .copy-button {
+      background-color: #ffffff;
+      color: #7f38ea;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+    }
+
+    .link-preview {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      opacity: 0;
+      transform: translateX(-100%);
+      animation: slideIn 0.5s forwards;
+    }
+
+    .link-preview img {
+      max-width: 100px;
+      margin-right: 10px;
+      border-radius: 10px;
+    }
+
+    .link-preview div {
+      max-width: 600px;
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    form {
+      display: flex;
+      padding: 20px;
+      border-top: 1px solid #ccc;
+      background-color: var(--form-background-color);
+    }
+
+    input {
+      flex-grow: 1;
+      margin-right: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: var(--input-background-color);
+      color: var(--input-text-color);
+    }
+
+    button {
+      background-color: #9115a2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #loader {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #9115a2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    :root {
+    --background-color: #e6f2ff;
+    --text-color: #333;
+    --container-background-color: #fff;
+    --sidebar-background-color: #d9e9ff; /* Açık mavi sidebar */
+    --user-message-background: #007bff; /* Mavi kullanıcı mesajı */
+    --user-message-text: #fff;
+    --bot-message-background: #cce5ff; /* Açık mavi bot mesajı */
+    --bot-message-text: #333;
+    --form-background-color: #fff;
+    --input-background-color: #fff;
+    --input-text-color: #333;
+  }
+
+    .dark-theme {
+    --background-color: #202c39; /* Koyu mavi arka plan */
+    --text-color: #eee;
+    --container-background-color: #283645;
+    --sidebar-background-color: #2f4050; /* Koyu mavi sidebar */
+    --user-message-background: #0056b3; /* Daha koyu mavi kullanıcı mesajı */
+    --user-message-text: #fff;
+    --bot-message-background: #3a4f65; /* Daha koyu mavi bot mesajı */
+    --bot-message-text: #eee;
+    --form-background-color: #283645;
+    --input-background-color: #384858;
+    --input-text-color: #eee;
+  }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="sidebar">
+      <button id="new-conversation-btn">Yeni Konuşma</button>
+      <div id="conversation-list"></div>
+    </div>
+    <div id="main-chat">
+      <h1>MAI-S</h1>
+      <div id="chat-history-container">
+        <div id="chat-history"></div>
+      </div>
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Enter your message">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+  <button id="theme-toggle">Dark Mode</button>
+  <div id="loader">
+    <img src="loader.gif" width="150px" alt="Loading...">
+  </div>
+
+  <button id="start-record-btn">Start Recording</button>
+  <button id="stop-record-btn" disabled>Stop Recording</button>
+  <audio id="audio-playback" controls></audio>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="utils.js" type="module"></script>
+  <script type="module">
+    let mediaRecorder;
+    let audioChunks = [];
+    
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.7.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, off, update, get, child } from "https://www.gstatic.com/firebasejs/9.7.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtC4k2ottGVcAxdoCCvWZW91KTSgFZDKQ",
+  authDomain: "mai-s-74798.firebaseapp.com",
+  projectId: "mai-s-74798",
+  storageBucket: "mai-s-74798.appspot.com",
+  messagingSenderId: "853971435583",
+  appId: "1:853971435583:web:0400e28298619540de788a",
+  measurementId: "G-Q0RVFNFXN3",
+  databaseURL: "https://mai-s-74798-default-rtdb.europe-west1.firebasedatabase.app"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const chatHistory = document.getElementById('chat-history');
+    const userInput = document.getElementById('user-input');
+    const form = document.getElementById('chat-form');
+    const newConversationBtn = document.getElementById('new-conversation-btn');
+    const conversationList = document.getElementById('conversation-list');
+    const loader = document.getElementById('loader');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+
+    let currentConversationId = null;
+    let messageListener = null;
+    let currentTheme = 'light';
+
+
+    const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+    const inlineCodePattern = /`([^`]+)`/g;
+    const boldPattern = /\*\*(.*?)\*\*/g;
+    const italicPattern = /(\*|_)(.*?)\1/g;
+    const strikethroughPattern = /~(.*?)~/g;
+    const headingPattern = /^(#{1,6})\s+(.*)$/gm;
+    const listPattern = /^(\*|-|\+)\s+(.*)$/gm;
+    const blockquotePattern = /^>\s+(.*)$/gm;
+
+
+    async function fetchLinkPreview(url) {
+      const previewResponse = await fetch(`https://api.linkpreview.net?key=a356f4cef8041a3ff8c770542f8e5248&q=${encodeURIComponent(url)}`);
+      return await previewResponse.json();
+    }
+
+
+    function formatMessage(message) {
+  const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+  const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+  const inlineCodePattern = /`([^`]+)`/g;
+  const boldPattern = /\*\*(.*?)\*\*/g;
+  const italicPattern = /(\*|_)(.*?)\1/g;
+  const strikethroughPattern = /~(.*?)~/g;
+  const headingPattern = /^(#{1,6})\s+(.*)$/gm;
+  const listPattern = /^(\*|-|\+)\s+(.*)$/gm;
+  const blockquotePattern = /^>\s+(.*)$/gm;
+
+  let formattedMessage = message
+    .replace(urlPattern, '<a href="$1" target="_blank">$1</a>')
+    .replace(codeBlockPattern, '<pre><code class="language-$1">$2</code></pre>')
+    .replace(inlineCodePattern, '<code>$1</code>')
+    .replace(boldPattern, '<strong>$1</strong>')
+    .replace(italicPattern, '<em>$2</em>')
+    .replace(strikethroughPattern, '<del>$1</del>')
+    .replace(headingPattern, (match, hashes, text) => `<h${hashes.length}>${text}</h${hashes.length}>`)
+    .replace(listPattern, '<li>$2</li>')
+    .replace(blockquotePattern, '<blockquote>$1</blockquote>')
+    .replace(/\n/g, '<br>');
+
+  // Liste öğelerini düzgün formatlamak için ek bir işlem
+  formattedMessage = `<ul>${formattedMessage.replace(/<\/li><br><li>/g, '</li><li>')}</ul>`;
+
+  return formattedMessage;
+}
+
+
+    function displayLoader(show) {
+      loader.style.display = show ? 'block' : 'none';
+    }
+
+function displayMessage(user, message) {
+  const chatHistory = document.getElementById('chat-history');
+  const messageElement = document.createElement('div');
+  messageElement.classList.add(user === 'bot' ? 'bot-message' : 'user-message');
+  messageElement.innerHTML = message;
+  chatHistory.appendChild(messageElement);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+
+    document.getElementById('start-record-btn').addEventListener('click', async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        audioChunks = [];
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+
+        const response = await axios.post('/speech-to-text', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const userMessage = response.data.text;
+        document.getElementById('user-input').value = userMessage;
+        await sendMessage();
+      };
+
+      mediaRecorder.start();
+      document.getElementById('start-record-btn').disabled = true;
+      document.getElementById('stop-record-btn').disabled = false;
+    });
+
+    document.getElementById('stop-record-btn').addEventListener('click', () => {
+      mediaRecorder.stop();
+      document.getElementById('start-record-btn').disabled = false;
+      document.getElementById('stop-record-btn').disabled = true;
+    });
+
+    async function sendMessage() {
+  if (!currentConversationId) {
+    createNewConversation();
+    return;
+  }
+  const userMessage = document.getElementById('user-input').value;
+  userInput.value = '';
+
+  try {
+    displayLoader(true);
+
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userInput: userMessage,
+        conversationId: currentConversationId,
+      }),
+    });
+
+    const data = await response.json();
+    let botMessage = data.response;
+
+// Regex patterns for formatting
+const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+const inlineCodePattern = /`([^`]+)`/g;
+const boldPattern = /\*\*(.*?)\*\*/g;
+const italicPattern = /(\*|_)(.*?)\1/g;
+const strikethroughPattern = /~(.*?)~/g;
+const headingPattern = /^(#{1,6})\s+(.*)$/gm;
+const listPattern = /^(\*|-|\+)\s+(.*)$/gm;
+const blockquotePattern = /^>\s+(.*)$/gm;
+
+let displayBotMessage = botMessage
+  .replace(urlPattern, '<a href="$1" target="_blank">$1</a>')
+  .replace(codeBlockPattern, '<pre><code class="language-$1">$2</code></pre>')
+  .replace(inlineCodePattern, '<code>$1</code>')
+  .replace(boldPattern, '<strong>$1</strong>')
+  .replace(italicPattern, '<em>$2</em>')
+  .replace(strikethroughPattern, '<del>$1</del>')
+  .replace(headingPattern, (match, hashes, text) => `<h${hashes.length}>${text}</h${hashes.length}>`)
+  .replace(listPattern, '<li>$2</li>')
+  .replace(blockquotePattern, '<blockquote>$1</blockquote>')
+  .replace(/\n/g, '<br>');
+
+displayBotMessage = `<ul>${displayBotMessage.replace(/<\/li><br><li>/g, '</li><li>')}</ul>`;
+
+const botMessageLines = displayBotMessage.split('<br>');
+
+chatHistory.innerHTML += `<div class="user-message">${userMessage}</div>`;
+const botMessageElement = document.createElement('div');
+botMessageElement.classList.add('bot-message');
+
+botMessageLines.forEach(line => {
+  const lineElement = document.createElement('div');
+  lineElement.innerHTML = line;
+  botMessageElement.appendChild(lineElement);
+});
+
+botMessageElement.innerHTML += ` <button class="copy-button" onclick="copyToClipboard('${displayBotMessage}')">Kopyala</button>`;
+chatHistory.appendChild(botMessageElement);
+
+// Highlight code blocks
+document.querySelectorAll('pre code').forEach((block) => {
+  hljs.highlightElement(block);
+});
+
+
+    for (const previewData of linkPreviews) {
+      const linkPreviewElement = document.createElement('div');
+      linkPreviewElement.classList.add('link-preview');
+      linkPreviewElement.innerHTML = `
+        <img src="${previewData.image}" alt="Preview Image">
+        <div>
+          <h3>${previewData.title}</h3>
+          <p>${previewData.description}</p>
+          <a href="${previewData.url}" target="_blank">Link</a>
+        </div>
+      `;
+      chatHistory.appendChild(linkPreviewElement);
+    }
+
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    saveMessageToFirebase(userMessage, botMessage);
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    displayLoader(false);
+  }
+
+  const botMessage = await fetchBotMessage(userMessage); // Implement fetchBotMessage to send userMessage to the backend
+      playBotMessage(botMessage);
+}
+
+    async function playBotMessage(botMessage) {
+      const response = await axios.post('/text-to-speech', { text: botMessage });
+      const audioBlob = new Blob([response.data.audioContent], { type: 'audio/mp3' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audioElement = document.getElementById('audio-playback');
+      audioElement.src = audioUrl;
+      audioElement.play();
+    }
+
+    function copyToClipboard(botMessage) {
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.value = botMessage;
+    document.body.appendChild(tempTextArea);
+    tempTextArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempTextArea);
+
+    const copyButtons = document.getElementsByClassName('copy-button');
+    for (const button of copyButtons) {
+        button.innerText = 'Copy';
+    }
+
+    event.target.innerText = 'Copied!';
+    setTimeout(() => {
+        event.target.innerText = 'Copy';
+    }, 2000);
+}
+
+    form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await sendMessage();
+  });
+
+    newConversationBtn.addEventListener('click', async () => {
+      const name = prompt("Konuşma Adını Girin:");
+      if (name) {
+        await createNewConversation(name);
+      }
+    });
+
+    async function createNewConversation(name = 'Yeni Konuşma') {
+    const newConversationRef = push(ref(database, 'conversations'));
+    currentConversationId = newConversationRef.key;
+
+    const initialMessageRef = push(ref(database, `conversations/${currentConversationId}/messages`));
+    set(initialMessageRef, {
+      userMessage: 'Merhaba!',
+      botMessage: 'Merhaba! Size nasıl yardımcı olabilirim?',
+      timestamp: Date.now(),
+    });
+
+    update(ref(database, `conversations/${currentConversationId}`), {
+      name: name
+    });
+
+    loadConversations();
+    loadConversation(currentConversationId);
+    notifyServerNewConversation(currentConversationId);
+  }
+
+async function fetchMessages() {
+  const messagesRef = ref(database, 'messages');
+  onValue(messagesRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const messages = Object.values(data);
+      messages.forEach(message => {
+        const formattedMessage = validateMessageFormat(message.text);
+        displayMessage(message.user, formattedMessage);
+      });
+    }
+  });
+}
+
+    function loadConversations() {
+      console.log("loadConversations() fonksiyonu çağrıldı.");
+  off(ref(database, 'conversations'));
+
+  onValue(ref(database, 'conversations'), (snapshot) => {
+    console.log("Konuşmalar yüklendi:", snapshot.val());
+    const conversations = snapshot.val();
+    conversationList.innerHTML = '';
+
+        if (conversations) {
+          for (const conversationId in conversations) {
+            if (conversations.hasOwnProperty(conversationId)) {
+              const conversationElement = document.createElement('div');
+              conversationElement.classList.add('conversation-item');
+              if (conversationId === currentConversationId) {
+                conversationElement.classList.add('selected');
+              }
+              conversationElement.innerText = conversations[conversationId].name || `Konuşma ${conversationId}`;
+              conversationElement.addEventListener('click', (event) => {
+                event.stopPropagation();
+                loadConversation(conversationId);
+              });
+
+              const editButton = document.createElement('button');
+              editButton.classList.add('edit-conversation-button');
+              editButton.innerText = 'Düzenle';
+              editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newName = prompt('Yeni konuşma adını girin:', conversationElement.innerText);
+                if (newName) {
+                  update(ref(database, `conversations/${conversationId}`), {
+                    name: newName
+                  });
+                  loadConversations();
+                }
+              });
+
+              conversationElement.appendChild(editButton);
+              conversationList.appendChild(conversationElement);
+            }
+          }
+        }
+      });
+    }
+
+
+function validateMessageFormat(message) {
+  // Mesajı Regex ifadeleriyle kontrol edin
+  let isValid = true;
+
+  if (message.match(urlPattern)) {
+    console.log("Mesaj URL içeriyor.");
+  } else if (message.match(codeBlockPattern)) {
+    console.log("Mesaj kod bloğu içeriyor.");
+  } else if (message.match(inlineCodePattern)) {
+    console.log("Mesaj satır içi kod içeriyor.");
+  } else if (message.match(boldPattern)) {
+    console.log("Mesaj kalın metin içeriyor.");
+  } else if (message.match(italicPattern)) {
+    console.log("Mesaj italik metin içeriyor.");
+  } else if (message.match(strikethroughPattern)) {
+    console.log("Mesaj üstü çizili metin içeriyor.");
+  } else if (message.match(headingPattern)) {
+    console.log("Mesaj başlık içeriyor.");
+  } else if (message.match(listPattern)) {
+    console.log("Mesaj liste içeriyor.");
+  } else if (message.match(blockquotePattern)) {
+    console.log("Mesaj alıntı içeriyor.");
+  } 
+
+  if (isValid) {
+    message = message
+      .replace(urlPattern, '<a href="$1" target="_blank">$1</a>')
+      .replace(codeBlockPattern, '<pre><code class="language-$1">$2</code></pre>')
+      .replace(inlineCodePattern, '<code>$1</code>')
+      .replace(boldPattern, '<strong>$1</strong>')
+      .replace(italicPattern, '<em>$2</em>')
+      .replace(strikethroughPattern, '<del>$1</del>')
+      .replace(headingPattern, (match, hashes, text) => `<h${hashes.length}>${text}</h${hashes.length}>`)
+      .replace(listPattern, '<li>$2</li>')
+      .replace(blockquotePattern, '<blockquote>$1</blockquote>')
+      .replace(/\n/g, '<br>');
+  }
+
+  return { isValid: isValid, formattedMessage: message }; // Hem geçerlilik durumunu hem de formatlanmış mesajı döndür
+}
+
+
+    function loadConversation(conversationId) {
+  currentConversationId = conversationId;
+  chatHistory.innerHTML = '';
+
+  if (messageListener) {
+    off(ref(database, `conversations/${currentConversationId}/messages`), 'value', messageListener);
+  }
+
+  messageListener = onValue(ref(database, `conversations/${currentConversationId}/messages`), (snapshot) => {
+    const messages = snapshot.val();
+    chatHistory.innerHTML = '';
+
+    for (const messageId in messages) {
+      if (messages.hasOwnProperty(messageId)) {
+        const message = messages[messageId];
+
+        // validateMessageFormat()'ı kullanarak mesajları formatlayın
+const formattedUserMessage = validateMessageFormat(message.userMessage).formattedMessage;
+const formattedBotMessage = validateMessageFormat(message.botMessage).formattedMessage;
+
+        const userMessageElement = document.createElement('div');
+        userMessageElement.classList.add('user-message');
+        userMessageElement.innerHTML = formattedUserMessage;
+        chatHistory.appendChild(userMessageElement);
+
+        const botMessageElement = document.createElement('div');
+        botMessageElement.classList.add('bot-message');
+        botMessageElement.innerHTML = `${formattedBotMessage} <button class="copy-button" onclick="copyToClipboard('${message.botMessage}')">Kopyala</button>`;
+        chatHistory.appendChild(botMessageElement);
+      }
+    }
+
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  });
+
+  loadConversations();
+}
+
+    function saveMessageToFirebase(userMessage, botMessage) {
+      if (!currentConversationId) {
+        createNewConversation();
+        return;
+      }
+
+      const messageRef = push(ref(database, `conversations/${currentConversationId}/messages`));
+      set(messageRef, {
+        userMessage: userMessage,
+        botMessage: botMessage,
+        timestamp: Date.now(),
+      });
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme');
+      currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+      themeToggleBtn.innerText = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+      saveThemeToFirebase(currentTheme);
+    });
+
+    function saveThemeToFirebase(theme) {
+      if (!currentConversationId) return;
+      update(ref(database, `conversations/${currentConversationId}`), {
+        theme: theme
+      });
+    }
+
+    async function loadThemeFromFirebase(conversationId) {
+      const themeRef = ref(database, `conversations/${conversationId}/theme`);
+      const snapshot = await get(themeRef);
+      const theme = snapshot.val();
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeToggleBtn.innerText = 'Light Mode';
+        currentTheme = 'dark';
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeToggleBtn.innerText = 'Dark Mode';
+        currentTheme = 'light';
+      }
+    }
+
+    async function initialize() {
+      await loadConversations();
+      if (currentConversationId) {
+        await loadThemeFromFirebase(currentConversationId);
+      }
+  }
+
+    initialize();
+  </script>
+</body>
+</html>
